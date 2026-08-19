@@ -63,24 +63,49 @@ class TestMetaServiceCalculos:
         assert fator == 1.2  # Valor fallback padrão
 
     def test_calcular_metricas_meta_emagrecer(self, mock_avaliacao):
-        # TMB 1800 * Moderado 1.55 = GET 2790. Déficit de 400 = 2390
-        # Água: 80kg * 35 = 2800ml
-        calorias, agua = MetaService.calcular_metricas_meta(mock_avaliacao, Objetivo.EMAGRECER)
+        (
+            calorias,
+            agua,
+            proteinas,
+            carboidratos,
+            gorduras,
+        ) = MetaService.calcular_metricas_meta(mock_avaliacao, Objetivo.EMAGRECER)
+
         assert calorias == 2390.0
         assert agua == 2800.0
+        assert proteinas == 160.0
+        assert carboidratos == 275.5
+        assert gorduras == 72.0
 
     def test_calcular_metricas_meta_ganhar_massa(self, mock_avaliacao):
-        # GET 2790. Superávit de 300 = 3090
-        calorias, agua = MetaService.calcular_metricas_meta(mock_avaliacao, Objetivo.GANHAR_MASSA)
+        (
+            calorias,
+            agua,
+            proteinas,
+            carboidratos,
+            gorduras,
+        ) = MetaService.calcular_metricas_meta(mock_avaliacao, Objetivo.GANHAR_MASSA)
+
         assert calorias == 3090.0
         assert agua == 2800.0
+        assert proteinas == 160.0
+        assert carboidratos == 432.5
+        assert gorduras == 80.0
 
     def test_calcular_metricas_meta_manter(self, mock_avaliacao):
-        # GET 2790
-        calorias, agua = MetaService.calcular_metricas_meta(mock_avaliacao, Objetivo.MANTER)
+        (
+            calorias,
+            agua,
+            proteinas,
+            carboidratos,
+            gorduras,
+        ) = MetaService.calcular_metricas_meta(mock_avaliacao, Objetivo.MANTER)
+
         assert calorias == 2790.0
         assert agua == 2800.0
-
+        assert proteinas == 128.0
+        assert carboidratos == 389.5
+        assert gorduras == 80.0
 
 # ==========================================================
 # 2. TESTES: criar_meta
@@ -206,7 +231,7 @@ class TestAtualizarMeta:
         assert err == "Meta não encontrada."
 
     @patch("models.db.session")
-    def test_atualizar_peso_alvo_e_status(self, mock_session, mock_meta):
+    def test_atualizar_peso_alvo(self, mock_session, mock_meta):
         mock_session.scalar.return_value = mock_meta
 
         dados = {
@@ -218,8 +243,6 @@ class TestAtualizarMeta:
 
         assert err is None
         assert mock_meta.peso_alvo_kg == 72.0
-        assert mock_meta.status == StatusMetaEnum.CONCLUIDA
-        assert mock_meta.concluida_em is not None
         mock_session.commit.assert_called_once()
 
     @patch("models.db.session")

@@ -9,36 +9,36 @@ bcrypt = Bcrypt()
 
 # --- ENUMS ---
 class SexoBiologico(str, Enum):
-    MASCULINO = "M"
-    FEMININO = "F"
+  MASCULINO = "M"
+  FEMININO = "F"
 
 class NivelAtividade(str, Enum):
-    SEDENTARIO = "sedentario"
-    LEVE = "leve"
-    MODERADO = "moderado"
-    INTENSO = "intenso"
-    MUITO_INTENSO = "muito_intenso"
+  SEDENTARIO = "sedentario"
+  LEVE = "leve"
+  MODERADO = "moderado"
+  INTENSO = "intenso"
+  MUITO_INTENSO = "muito_intenso"
 
 class Objetivo(str, Enum):
-    EMAGRECER = "emagrecer"
-    MANTER = "manter"
-    GANHAR_MASSA = "ganhar_massa"
+  EMAGRECER = "emagrecer"
+  MANTER = "manter"
+  GANHAR_MASSA = "ganhar_massa"
 
 class StatusAvaliacaoEnum(str, Enum):
-    ATIVO = 'ATIVO'
-    DESATIVADO = 'DESATIVADO'
+  ATIVO = 'ATIVO'
+  DESATIVADO = 'DESATIVADO'
 
 class StatusMetaEnum(str, Enum):
-    ATIVA = "ativa"
-    CONCLUIDA = "concluida"
-    CANCELADA = "cancelada"
+  ATIVA = "ativa"
+  CONCLUIDA = "concluida"
+  CANCELADA = "cancelada"
 
 class TokenBlocklist(db.Model):
-    __tablename__ = 'token_blocklist'
+  __tablename__ = 'token_blocklist'
 
-    id = db.Column(db.Integer, primary_key=True)
-    jti = db.Column(db.String(36), nullable=False, index=True)
-    criado_em = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+  id = db.Column(db.Integer, primary_key=True)
+  jti = db.Column(db.String(36), nullable=False, index=True)
+  criado_em = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 class Usuario(db.Model):
   __tablename__ = 'usuarios'
@@ -75,11 +75,11 @@ class Usuario(db.Model):
   def idade_atual(self) -> int:
     hoje = date.today()
     return (
-        hoje.year
-        - self.data_nascimento.year
-        - (
-            (hoje.month, hoje.day)
-            < (self.data_nascimento.month, self.data_nascimento.day)
+      hoje.year
+      - self.data_nascimento.year
+      - (
+          (hoje.month, hoje.day)
+          < (self.data_nascimento.month, self.data_nascimento.day)
         )
     )
 
@@ -89,13 +89,13 @@ class Usuario(db.Model):
 
   def to_dict(self) -> dict:
     return {
-        'id': self.id,
-        'nome': self.nome,
-        'email': self.email,
-        'data_nascimento': self.data_nascimento.strftime('%Y-%m-%d'),
-        'idade': self.idade_atual,
-        'ativo': self.ativo,
-        'criado_em': self.criado_em.isoformat() if self.criado_em else None,
+      'id': self.id,
+      'nome': self.nome,
+      'email': self.email,
+      'data_nascimento': self.data_nascimento.strftime('%Y-%m-%d'),
+      'idade': self.idade_atual,
+      'ativo': self.ativo,
+      'criado_em': self.criado_em.isoformat() if self.criado_em else None,
     }
 
 
@@ -144,9 +144,9 @@ class AvaliacaoFisica(db.Model):
     nasc = self.usuario.data_nascimento
 
     return (
-        data_eval.year
-        - nasc.year
-        - ((data_eval.month, data_eval.day) < (nasc.month, nasc.day))
+      data_eval.year
+      - nasc.year
+      - ((data_eval.month, data_eval.day) < (nasc.month, nasc.day))
     )
 
   def to_dict(self) -> dict:
@@ -156,15 +156,15 @@ class AvaliacaoFisica(db.Model):
         'peso': self.peso,
         'altura': self.altura,
         'sexo_biologico': (
-            self.sexo_biologico.value
-            if isinstance(self.sexo_biologico, Enum)
-            else self.sexo_biologico
+          self.sexo_biologico.value
+          if isinstance(self.sexo_biologico, Enum)
+          else self.sexo_biologico
         ),
         'imc': self.imc,
         'nivel_atividade_padrao': (
-            self.nivel_atividade_padrao.value
-            if isinstance(self.nivel_atividade_padrao, Enum)
-            else self.nivel_atividade_padrao
+          self.nivel_atividade_padrao.value
+          if isinstance(self.nivel_atividade_padrao, Enum)
+          else self.nivel_atividade_padrao
         ),
         'tmb': self.tmb,
         'cintura': self.cintura,
@@ -173,68 +173,96 @@ class AvaliacaoFisica(db.Model):
         'brazo_contraido': self.braco_contraido,
         'ativo': self.ativo,
         'desativado_em': (
-            self.desativado_em.isoformat() if self.desativado_em else None
+          self.desativado_em.isoformat() if self.desativado_em else None
         ),
         'data_criacao': (
-            self.data_criacao.isoformat() if self.data_criacao else None
+          self.data_criacao.isoformat() if self.data_criacao else None
         ),
     }
 
 
 class Meta(db.Model):
-    __tablename__ = 'metas'
+  __tablename__ = 'metas'
+
+  id = db.Column(db.Integer, primary_key=True)
+
+  usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, index=True)
+  avaliacao_origem_id = db.Column(db.Integer, db.ForeignKey('avaliacoes_fisicas.id'), nullable=True)
+
+  objetivo = db.Column(db.Enum(Objetivo), nullable=False)
+  peso_alvo_kg = db.Column(db.Float, nullable=False)
+  calorias_alvo_kcal = db.Column(db.Float, nullable=False)
+
+  proteinas_alvo_g = db.Column(db.Float, nullable=True)
+  carboidratos_alvo_g = db.Column(db.Float, nullable=True)
+  gorduras_alvo_g = db.Column(db.Float, nullable=True)
+  meta_agua_ml = db.Column(db.Float, nullable=False)
+
+  status = db.Column(db.Enum(StatusMetaEnum), default=StatusMetaEnum.ATIVA, nullable=False)
+  criada_em = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+  concluida_em = db.Column(db.DateTime, nullable=True) 
+
+
+  def to_dict(self) -> dict:
+    return {
+      "id": self.id,
+      "usuario_id": self.usuario_id,
+      "objetivo": self.objetivo.value if isinstance(self.objetivo, Enum) else self.objetivo,
+      "peso_alvo_kg": self.peso_alvo_kg,
+      "calorias_alvo_kcal": self.calorias_alvo_kcal,
+      "meta_agua_ml": self.meta_agua_ml,
+      "proteinas_alvo_g": self.proteinas_alvo_g,
+      "carboidratos_alvo_g": self.carboidratos_alvo_g,
+      "gorduras_alvo_g": self.gorduras_alvo_g,
+      "status": self.status.value if isinstance(self.status, Enum) else self.status,
+      "criada_em": self.criada_em.isoformat() if self.criada_em else None
+    }
+
+class RegistroDiario(db.Model):
+    __tablename__ = "registros_diarios"
+
+    # Constraint para garantir 1 registro por usuário por data
+    __table_args__ = (
+        db.UniqueConstraint(
+            "usuario_id", "data", name="uq_usuario_registro_diario_data"
+        ),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False, index=True)
+    meta_id = db.Column(db.Integer, db.ForeignKey("metas.id"), nullable=True)  
 
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, index=True)
+    # Snapshot da meta vigente
+    data = db.Column(db.Date, default=date.today, nullable=False, index=True)
 
-    avaliacao_origem_id = db.Column(db.Integer, db.ForeignKey('avaliacoes_fisicas.id'), nullable=True)
+    # Consumo Nutricional
+    calorias_consumidas_kcal = db.Column(db.Float, default=0.0, nullable=True)
+    proteinas_g = db.Column(db.Float, default=0.0, nullable=True)
+    carboidratos_g = db.Column(db.Float, default=0.0, nullable=True)
+    gorduras_g = db.Column(db.Float, default=0.0, nullable=True)
 
-    objetivo = db.Column(db.Enum(Objetivo), nullable=False)
-    peso_alvo_kg = db.Column(db.Float, nullable=False)
-    calorias_alvo_kcal = db.Column(db.Float, nullable=False)
-    meta_agua_ml = db.Column(db.Float, nullable=False)
-    status = db.Column(db.Enum(StatusMetaEnum), default=StatusMetaEnum.ATIVA, nullable=False)
-    criada_em = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    concluida_em = db.Column(db.DateTime, nullable=True) 
+    # Hidratação e Atividade
+    agua_consumida_ml = db.Column(db.Float, default=0.0, nullable=True)
+    exercicio_realizado = db.Column(db.Boolean, default=False)
 
+    # Indicadores Adicionais
+    peso_registro_kg = db.Column(db.Float, nullable=True) 
+
+    # Para acompanhar flutuação diária
+    observacoes = db.Column(db.String(255), nullable=True)
 
     def to_dict(self) -> dict:
       return {
         "id": self.id,
         "usuario_id": self.usuario_id,
-        "objetivo": self.objetivo.value if isinstance(self.objetivo, Enum) else self.objetivo,
-        "peso_alvo_kg": self.peso_alvo_kg,
-        "calorias_alvo_kcal": self.calorias_alvo_kcal,
-        "meta_agua_ml": self.meta_agua_ml,
-        "status": self.status,
-        "criada_em": self.criada_em.isoformat() if self.criada_em else None
+        "meta_id": self.meta_id,
+        "data": self.data.strftime("%Y-%m-%d"),
+        "calorias_consumidas_kcal": self.calorias_consumidas_kcal,
+        "proteinas_g": self.proteinas_g,
+        "carboidratos_g": self.carboidratos_g,
+        "gorduras_g": self.gorduras_g,
+        "agua_consumida_ml": self.agua_consumida_ml,
+        "exercicio_realizado": self.exercicio_realizado,
+        "peso_registro_kg": self.peso_registro_kg,
+        "observacoes": self.observacoes,
       }
-
-
-class RegistroDiario(db.Model):
-    __tablename__ = 'registros_diarios'
-
-    id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, index=True)
-    data = db.Column(db.Date, default=date.today, nullable=False)
-    
-    calorias_consumidas_kcal = db.Column(db.Float, default=0.0)
-    proteinas_g = db.Column(db.Float, default=0.0)
-    carboidratos_g = db.Column(db.Float, default=0.0)
-    gorduras_g = db.Column(db.Float, default=0.0)
-    agua_consumida_ml = db.Column(db.Float, default=0.0)
-    exercicio_realizado = db.Column(db.Boolean, default=False)
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "usuario_id": self.usuario_id,
-            "data": self.data.strftime('%Y-%m-%d'),
-            "calorias_consumidas_kcal": self.calorias_consumidas_kcal,
-            "proteinas_g": self.proteinas_g,
-            "carboidratos_g": self.carboidratos_g,
-            "gorduras_g": self.gorduras_g,
-            "agua_consumida_ml": self.agua_consumida_ml,
-            "exercicio_realizado": self.exercicio_realizado
-        }

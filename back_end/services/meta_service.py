@@ -26,8 +26,11 @@ class MetaService:
     @staticmethod
     def calcular_metricas_meta(
         ultima_avaliacao: AvaliacaoFisica, objetivo: Objetivo
-    ) -> tuple[float, float]:
-        """Calcula calorias alvo e água diária baseando-se na última avaliação e no objetivo."""
+    ) -> tuple[float, float, float, float, float]:
+        """Calcula calorias alvo, água diária e macronutrientes (proteínas, carboidratos e gorduras em gramas)
+
+        baseando-se na última avaliação e no objetivo.
+        """
         tmb = ultima_avaliacao.tmb or 0.0
         peso_atual = ultima_avaliacao.peso
 
@@ -38,18 +41,44 @@ class MetaService:
         # Gasto Energético Total (GET)
         get = tmb * fator_atividade
 
-        # Ajuste do saldo calórico baseado no Objetivo
+        # Ajuste calórico e multiplicadores de macros por kg corporal
         if objetivo == Objetivo.EMAGRECER:
-            calorias_alvo = get - 400.0  # Déficit calórico
+            calorias_alvo = get - 400.0  
+            g_proteina_por_kg = 2.0
+            g_gordura_por_kg = 0.9
+
         elif objetivo == Objetivo.GANHAR_MASSA:
-            calorias_alvo = get + 300.0  # Superávit calórico
-        else:  # MANTER
+            calorias_alvo = get + 300.0 
+            g_proteina_por_kg = 2.0
+            g_gordura_por_kg = 1.0
+        else:  
             calorias_alvo = get
+            g_proteina_por_kg = 1.6
+            g_gordura_por_kg = 1.0
 
         # Meta de Água: 35 mL por quilo de peso corporal
         meta_agua_ml = peso_atual * 35.0
 
-        return round(calorias_alvo, 2), round(meta_agua_ml, 2)
+        # Cálculo das gramas de Proteína e Gordura
+        proteinas_alvo_g = peso_atual * g_proteina_por_kg
+        gorduras_alvo_g = peso_atual * g_gordura_por_kg
+
+        # O restante do saldo calórico é convertido em Carboidratos (4 kcal por grama)
+        calorias_proteinas = proteinas_alvo_g * 4.0
+        calorias_gorduras = gorduras_alvo_g * 9.0
+        calorias_restantes_carbo = calorias_alvo - (calorias_proteinas + calorias_gorduras)
+
+        # Evita carboidrato negativo caso o déficit seja muito agressivo
+        carboidratos_alvo_g = max(0.0, calorias_restantes_carbo / 4.0)
+
+        return (
+            round(calorias_alvo, 2),
+            round(meta_agua_ml, 2),
+            round(proteinas_alvo_g, 2),
+            round(carboidratos_alvo_g, 2),
+            round(gorduras_alvo_g, 2),
+        )    
+
 
     @staticmethod
     def criar_meta(usuario_id: int, dados_validados: dict) -> tuple[dict | None, str | None]:
@@ -74,9 +103,13 @@ class MetaService:
             peso_alvo = dados_validados["peso_alvo_kg"]
 
             # 2. Calcula calorias e água usando os dados da avaliação
-            calorias_alvo, meta_agua_ml = MetaService.calcular_metricas_meta(
-                ultima_avaliacao, objetivo
-            )
+            (
+                calorias_alvo,
+                meta_agua_ml,
+                proteinas_alvo_g,
+                carboidratos_alvo_g,
+                gorduras_alvo_g,
+            ) = MetaService.calcular_metricas_meta(ultima_avaliacao, objetivo)
 
             # 3. Desativa/Finaliza metas antigas que ainda estejam com status ATIVO
             stmt_metas_ativas = select(Meta).where(
@@ -99,6 +132,9 @@ class MetaService:
                 peso_alvo_kg=peso_alvo,
                 calorias_alvo_kcal=calorias_alvo,
                 meta_agua_ml=meta_agua_ml,
+                gorduras_alvo_g=gorduras_alvo_g,
+                proteinas_alvo_g=proteinas_alvo_g,
+                carboidratos_alvo_g=carboidratos_alvo_g,
                 status=StatusMetaEnum.ATIVA
             )
 
@@ -168,13 +204,6 @@ class MetaService:
             if "peso_alvo_kg" in dados_validados:
                 meta.peso_alvo_kg = dados_validados["peso_alvo_kg"]
 
-            if "status" in dados_validados:
-                novo_status = dados_validados["status"]
-                meta.status = novo_status
-
-                if novo_status in [StatusMetaEnum.CONCLUIDA, StatusMetaEnum.CANCELADA]:
-                    meta.concluida_em = datetime.now(timezone.utc)
-
             if "objetivo" in dados_validados:
                 novo_objetivo = dados_validados["objetivo"]
                 meta.objetivo = novo_objetivo
@@ -191,11 +220,14 @@ class MetaService:
                 ultima_avaliacao = db.session.scalar(stmt_aval)
 
                 if ultima_avaliacao:
-                    calorias_alvo, meta_agua_ml = MetaService.calcular_metricas_meta(
+                    calorias_alvo, meta_agua_ml, carboidratos_alvo_g, proteinas_alvo_g, gorduras_alvo_g  = MetaService.calcular_metricas_meta(
                         ultima_avaliacao, novo_objetivo
                     )
                     meta.calorias_alvo_kcal = calorias_alvo
                     meta.meta_agua_ml = meta_agua_ml
+                    meta.carboidratos_alvo_g = carboidratos_alvo_g
+                    meta.proteinas_alvo_g = proteinas_alvo_g
+                    meta.gorduras_alvo_g = gorduras_alvo_g
 
             db.session.commit()
             return meta.to_dict(), None
