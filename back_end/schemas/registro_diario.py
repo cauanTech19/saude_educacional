@@ -1,12 +1,7 @@
-from datetime import date
 from typing import Optional
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 
 class RegistroDiarioBase(BaseModel):
-    data: Optional[date] = Field(
-        default_factory=date.today,
-        description="Data do registro (padrão: hoje)"
-    )
     calorias_consumidas_kcal: Optional[float] = Field(
         default=None, ge=0.0, le=15000.0, description="Calorias totais (0 a 15.000 kcal)"
     )
@@ -23,7 +18,7 @@ class RegistroDiarioBase(BaseModel):
         default=None, ge=0.0, le=10000.0, description="Água em mL (0 a 10.000ml)"
     )
     exercicio_realizado: Optional[bool] = Field(
-        default=None, description="Indica se realizou atividade física"
+        default=None, description="Indica se realizou atividade física no dia"
     )
     peso_registro_kg: Optional[float] = Field(
         default=None, ge=20.0, le=350.0, description="Peso em kg (20kg a 350kg)"
@@ -32,10 +27,12 @@ class RegistroDiarioBase(BaseModel):
         default=None, max_length=255, description="Anotações gerais do dia"
     )
 
-    model_config = ConfigDict(extra='forbid')
+
+class RegistroDiarioCreateSchema(RegistroDiarioBase):
+    meta_id: int = Field(
+        ..., gt=0, description="ID da meta vinculada (obrigatório e imutável)"
+    )
 
 
 class RegistroDiarioUpdateSchema(RegistroDiarioBase):
-    data: Optional[date] = Field(default=None)
-
-
+    ...

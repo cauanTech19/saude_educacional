@@ -1,12 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from models import Meta, AvaliacaoFisica, Objetivo, NivelAtividade, StatusMetaEnum
-from services.meta_service import MetaService, MULTIPLICADORES_ATIVIDADE
-
-
-# ==========================================================
-# FIXTURES E MOCKS REUTILIZÁVEIS
-# ==========================================================
+from services.meta_service import MetaService
 
 @pytest.fixture
 def mock_avaliacao():

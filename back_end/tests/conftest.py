@@ -9,7 +9,8 @@ if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
 from app import create_app
-from models import db, Usuario
+from models import db, Usuario, Meta, Objetivo
+from flask_jwt_extended import create_access_token
 
 
 @pytest.fixture
@@ -26,6 +27,33 @@ def app():
         yield app
         db.session.remove()
         db.drop_all()
+
+
+@pytest.fixture
+def auth_headers(usuario_db):
+    """Gera token válido para o usuário criado no banco."""
+    token = create_access_token(identity=str(usuario_db.id))
+        
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+
+    }
+
+
+@pytest.fixture
+def headers_jwt_dict(app):
+    """Headers com Token JWT contendo claims adicionais simulando dicionário via additional_claims."""
+    with app.app_context():
+        token = create_access_token(
+            identity="1",
+            additional_claims={"user_data": {"id": 1}}
+        )
+        return {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
 
 
 @pytest.fixture
@@ -50,6 +78,29 @@ def dados_usuario_validos():
         "senha": "senhaSegura123!@",
         "data_nascimento": "1995-08-15",
     }
+
+
+
+@pytest.fixture
+def meta_db_ativa(db_session):
+    """Insere uma meta real no banco em memória para testar o CRUD."""
+    meta = Meta(
+        id=1,
+        usuario_id=1,
+        objetivo=Objetivo.GANHAR_MASSA,
+        calorias_alvo_kcal=2500.0,
+        peso_alvo_kg=75.0,
+        proteinas_alvo_g=160.0,
+        carboidratos_alvo_g=300.0,
+        gorduras_alvo_g=70.0,
+        meta_agua_ml=3000.0,
+    )
+    db_session.add(meta)
+    db_session.commit()
+    db_session.refresh(meta)
+    return meta
+
+
 
 
 @pytest.fixture

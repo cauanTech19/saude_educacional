@@ -1,5 +1,4 @@
 import pytest
-from datetime import date, timedelta
 from pydantic import ValidationError
 from schemas.user import UsuarioSchema
 
@@ -46,9 +45,6 @@ def test_cadastro_senha_valida_com_sucesso(client, dados_usuario_validos):
   dados['senha'] = 'senhaSegura123!@'
 
   response = client.post('/api/auth/register', json=dados)
-
-  print("\n[DEBUG RESPOSTA ERRO]:", response.get_json())
-
   assert response.status_code == 201
 
 

@@ -10,13 +10,8 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.post('/register')
 def register():
-  # 1. Validação de dados de entrada com Pydantic
-  try:
-    dados_validados = UsuarioSchema(**request.get_json()).model_dump()
-    
-  except ValidationError as e:
-    return jsonify({'erro': formatar_erros_pydantic(e)}), 400 
-
+  dados_validados = UsuarioSchema(**request.get_json()).model_dump()
+  
   usuario_criado, erro = UsuarioService.criar_usuario(dados_validados)
 
   if erro:
@@ -24,22 +19,16 @@ def register():
 
   return (
       jsonify({'mensagem': 'Usuário cadastrado com sucesso!',
-               'usuario': usuario_criado,
-      }),
-      201,
+               'usuario': usuario_criado,}),201
   )
 
 
 @auth_bp.post('/login')
 def login():
-  # 1. Validação de entrada com Pydantic
-  try:
-    # O `or {}` evita que e.g. request.get_json() sendo None quebre o unpacking (**)
-    dados_requisicao = request.get_json() or {}
-    dados_validados = UsuarioLoginSchema(**dados_requisicao).model_dump()
 
-  except ValidationError as e:
-    return jsonify({'erros': formatar_erros_pydantic(e)}), 400
+  dados_requisicao = request.get_json() or {}
+  dados_validados = UsuarioLoginSchema(**dados_requisicao).model_dump()
+
 
   # 2. Autenticação no Service
   usuario, erro = UsuarioService.autenticar_usuario(
@@ -57,21 +46,15 @@ def login():
         'access_token': access_token,
         'token_type': 'Bearer',
         'usuario': usuario.to_dict(),
-      }),
-      200,
+      }), 200,
   )
 
 @auth_bp.put('/atualizar')
 @jwt_required()
 def atualizar_perfil():
-  try:
-    # O `or {}` evita que e.g. request.get_json() sendo None quebre o unpacking (**)
-    usuario_id = int(get_jwt_identity())
-    dados = request.get_json() or {}
-    dados_validados = UsuarioUpdateSchema(**dados).model_dump(exclude_unset=True)
-
-  except ValidationError as e:
-    return jsonify({'erros': formatar_erros_pydantic(e)}), 400
+  usuario_id = int(get_jwt_identity())
+  dados = request.get_json() or {}
+  dados_validados = UsuarioUpdateSchema(**dados).model_dump(exclude_unset=True)
 
   usuario_atualizado, erro = UsuarioService.atualizar_usuario(usuario_id, dados_validados)
 
@@ -87,14 +70,14 @@ def atualizar_perfil():
 @auth_bp.post('/logout')
 @jwt_required()
 def logout():
-    # Extrai o identificador único (jti) do token atual
-    jti = get_jwt()["jti"]
+  # Extrai o identificador único (jti) do token atual
+  jti = get_jwt()["jti"]
     
-    sucesso, erro = UsuarioService.revogar_token(jti)
+  sucesso, erro = UsuarioService.revogar_token(jti)
 
-    if erro:
-        return jsonify({'mensagem': erro}), 500
-    return jsonify({'mensagem': 'Logout realizado com sucesso! Token revogado.'}), 200
+  if erro:
+      return jsonify({'mensagem': erro}), 500
+  return jsonify({'mensagem': 'Logout realizado com sucesso! Token revogado.'}), 200
 
 
 @auth_bp.delete('/desativar')
@@ -107,6 +90,7 @@ def desativar_conta():
 
   except ValueError as e:
     return jsonify({'erro': str(e)}), 400
+  
   except Exception as e:
     return jsonify({'erro': 'Erro interno ao desativar conta.'}), 500
 

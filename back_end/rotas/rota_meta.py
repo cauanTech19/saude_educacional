@@ -27,23 +27,14 @@ def criar_meta():
     usuario_id = _obter_usuario_id()
     dados_brutos = request.get_json() or {}
 
-    try:
-        schema = MetaCreateSchema(**dados_brutos)
-        dados_validados = schema.model_dump(exclude_unset=True)
-    except ValidationError as e:
-        return (
-            jsonify({
-                'erro': 'Dados inválidos na requisição',
-                'detalhes': formatar_erros_pydantic(e),
-            }),
-            400,
-        )
-
+    schema = MetaCreateSchema(**dados_brutos)
+    dados_validados = schema.model_dump(exclude_unset=True)
+    
     meta_dict, erro = MetaService.criar_meta(usuario_id, dados_validados)
 
     if erro:
         return jsonify({'erro': erro}), 400
-
+    
     return (
         jsonify({
             'mensagem': 'Meta criada com sucesso!',
@@ -85,17 +76,9 @@ def atualizar_meta(meta_id: int):
     usuario_id = _obter_usuario_id()
     dados_brutos = request.get_json() or {}
 
-    try:
-        schema = MetaUpdateSchema(**dados_brutos)
-        dados_validados = schema.model_dump(exclude_unset=True)
-    except ValidationError as e:
-        return (
-            jsonify({
-                'erro': 'Dados inválidos na requisição',
-                'detalhes': formatar_erros_pydantic(e),
-            }),
-            400,
-        )
+    schema = MetaUpdateSchema(**dados_brutos)
+    dados_validados = schema.model_dump(exclude_unset=True)
+
 
     meta_dict, erro = MetaService.atualizar_meta(
         meta_id=meta_id,

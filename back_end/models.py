@@ -219,50 +219,50 @@ class Meta(db.Model):
     }
 
 class RegistroDiario(db.Model):
-    __tablename__ = "registros_diarios"
+  __tablename__ = "registros_diarios"
 
-    # Constraint para garantir 1 registro por usuário por data
-    __table_args__ = (
-        db.UniqueConstraint(
-            "usuario_id", "data", name="uq_usuario_registro_diario_data"
-        ),
-    )
+  # Constraint para garantir 1 registro por usuário por data
+  __table_args__ = (
+    db.UniqueConstraint(
+      "usuario_id", "data", name="uq_usuario_registro_diario_data"
+    ),
+  )
 
-    id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False, index=True)
-    meta_id = db.Column(db.Integer, db.ForeignKey("metas.id"), nullable=True)  
+  id = db.Column(db.Integer, primary_key=True)
+  usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False, index=True)
+  meta_id = db.Column(db.Integer, db.ForeignKey("metas.id"), nullable=False)  
 
-    # Snapshot da meta vigente
-    data = db.Column(db.Date, default=date.today, nullable=False, index=True)
+  # Snapshot da meta vigente
+  data = db.Column(db.Date, default=date.today, nullable=False, index=True)
 
-    # Consumo Nutricional
-    calorias_consumidas_kcal = db.Column(db.Float, default=0.0, nullable=True)
-    proteinas_g = db.Column(db.Float, default=0.0, nullable=True)
-    carboidratos_g = db.Column(db.Float, default=0.0, nullable=True)
-    gorduras_g = db.Column(db.Float, default=0.0, nullable=True)
+  # Consumo Nutricional
+  calorias_consumidas_kcal = db.Column(db.Float, default=0.0, nullable=True)
+  proteinas_g = db.Column(db.Float, default=0.0, nullable=True)
+  carboidratos_g = db.Column(db.Float, default=0.0, nullable=True)
+  gorduras_g = db.Column(db.Float, default=0.0, nullable=True)
 
-    # Hidratação e Atividade
-    agua_consumida_ml = db.Column(db.Float, default=0.0, nullable=True)
-    exercicio_realizado = db.Column(db.Boolean, default=False)
+  # Hidratação e Atividade
+  agua_consumida_ml = db.Column(db.Float, default=0.0, nullable=True)
+  exercicio_realizado = db.Column(db.Boolean, default=False, nullable=True)
 
-    # Indicadores Adicionais
-    peso_registro_kg = db.Column(db.Float, nullable=True) 
+  # Indicadores Adicionais
+  peso_registro_kg = db.Column(db.Float, nullable=True) 
 
-    # Para acompanhar flutuação diária
-    observacoes = db.Column(db.String(255), nullable=True)
+  # Para acompanhar flutuação diária
+  observacoes = db.Column(db.String(255), nullable=True)
 
-    def to_dict(self) -> dict:
-      return {
-        "id": self.id,
-        "usuario_id": self.usuario_id,
-        "meta_id": self.meta_id,
-        "data": self.data.strftime("%Y-%m-%d"),
-        "calorias_consumidas_kcal": self.calorias_consumidas_kcal,
-        "proteinas_g": self.proteinas_g,
-        "carboidratos_g": self.carboidratos_g,
-        "gorduras_g": self.gorduras_g,
-        "agua_consumida_ml": self.agua_consumida_ml,
-        "exercicio_realizado": self.exercicio_realizado,
-        "peso_registro_kg": self.peso_registro_kg,
-        "observacoes": self.observacoes,
-      }
+  def to_dict(self) -> dict:
+    return {
+      "id": self.id,
+      "usuario_id": self.usuario_id,
+      "meta_id": self.meta_id,
+      "data": self.data.strftime("%Y-%m-%d"),
+      "calorias_consumidas_kcal": self.calorias_consumidas_kcal,
+      "proteinas_g": self.proteinas_g,
+      "carboidratos_g": self.carboidratos_g,
+      "gorduras_g": self.gorduras_g,
+      "agua_consumida_ml": self.agua_consumida_ml,
+      "exercicio_realizado": self.exercicio_realizado,
+      "peso_registro_kg": self.peso_registro_kg,
+      "observacoes": self.observacoes,
+    }

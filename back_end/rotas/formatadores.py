@@ -42,14 +42,18 @@ def formatar_erros_pydantic(e: ValidationError) -> list[str]:
 
     # 3. Trata limites MÍNIMOS (gt / ge)
     elif tipo_erro in ('greater_than', 'greater_than_equal'):
-      limite = ctx.get('gt') or ctx.get('ge')
-      msg = f'O valor deve ser maior que {limite}.'
+        limite = (
+            ctx.get('gt') if ctx.get('gt') is not None else ctx.get('ge')
+        )
+        msg = f'O valor deve ser maior que {limite}.'
 
     # 4. Trata limites MÁXIMOS (lt / le)
     elif tipo_erro in ('less_than', 'less_than_equal'):
-      limite = ctx.get('lt') or ctx.get('le')
-      msg = f'O valor deve ser menor que {limite}.'
-
+        limite = (
+            ctx.get('lt') if ctx.get('lt') is not None else ctx.get('le')
+        )
+        msg = f'O valor deve ser menor que {limite}.'
+        
     # 5. Remove o prefixo "Value error, "
     elif msg_original.startswith('Value error, '):
       msg = msg_original.replace('Value error, ', '')

@@ -1,4 +1,4 @@
-from models import Usuario, db, TokenBlocklist
+from models import Usuario, db, TokenBlocklist, select
 from datetime import timezone, datetime, date
 
 class UsuarioService:  
@@ -48,10 +48,10 @@ class UsuarioService:
   def autenticar_usuario(email: str, senha: str) -> tuple[Usuario | None, str | None]:
     """Regra de negócio para validação de login."""
 
-    usuario = (
-      db.session.query(Usuario).filter_by(email=email).first()
-    )
+    stmt = select(Usuario).where(Usuario.email == email)
+    usuario = db.session.scalar(stmt)
 
+    
     if not usuario or not usuario.checar_senha(senha):
       return None, "E-mail ou senha estão incorretos."
 

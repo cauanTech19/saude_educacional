@@ -1,18 +1,5 @@
 import pytest
-from flask_jwt_extended import create_access_token
 from models import StatusAvaliacaoEnum
-
-
-@pytest.fixture
-def auth_headers(app, usuario_db):
-    """Gera o cabeçalho Authorization com JWT token válido para o usuário de teste."""
-    with app.app_context():
-        token = create_access_token(identity=str(usuario_db.id))
-        return {
-            'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/json',
-        }
-
 
 @pytest.fixture
 def payload_valido():
@@ -20,7 +7,7 @@ def payload_valido():
         "peso": 75.0,
         "altura": 1.75,
         "sexo_biologico": "M",
-        "nivel_atividade_padrao": "leve",  # Uppercase para coincidir com o Enum
+        "nivel_atividade_padrao": "leve",  
         "cintura": 80.0,
         "quadril": 95.0,
         "braco_relaxado": 32.0,
@@ -32,17 +19,15 @@ def payload_valido():
 # 1. CRIAR AVALIAÇÃO (POST)
 # ==============================================================================
 def test_criar_avaliacao_sucesso(client, auth_headers, payload_valido):
-    response = client.post('/api/avaliacoes/', json=payload_valido, headers=auth_headers)
-    
-    # Passa o JSON retornado como mensagem da asserção
+    response = client.post('/api/avaliacoes/', json=payload_valido, headers=auth_headers)    
     assert response.status_code == 201, f"Erro retornado pela API: {response.get_json()}"
+
 def test_criar_avaliacao_sem_autenticacao(client, payload_valido):
     response = client.post('/api/avaliacoes/', json=payload_valido)
     assert response.status_code == 401
 
 
 def test_criar_avaliacao_payload_invalido_pydantic(client, auth_headers):
-    # Peso inválido (10.0), mas com TODOS os campos obrigatórios presentes e válidos
     payload = {
         'peso': 10.0, 
         'altura': 1.75,
@@ -52,9 +37,6 @@ def test_criar_avaliacao_payload_invalido_pydantic(client, auth_headers):
     response = client.post('/api/avaliacoes/', json=payload, headers=auth_headers)
     
     assert response.status_code == 400
-    data = response.get_json()
-    assert data['erro'] == 'Dados inválidos na requisição'
-    assert 'detalhes' in data
 
 
 # ==============================================================================
@@ -125,9 +107,3 @@ def test_criar_avaliacao_campo_extra_proibido(client, auth_headers, payload_vali
     )
 
     assert response.status_code == 400
-    data = response.get_json()
-
-    assert data['erro'] in ('Dados inválidos', 'Dados inválidos na requisição')
-    detalhes = data['detalhes']
-    assert isinstance(detalhes, list)
-    assert any("campo_inventado" in str(msg) for msg in detalhes)

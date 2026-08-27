@@ -14,7 +14,6 @@ class AvaliacaoCreateSchema(BaseModel):
     braco_relaxado: Optional[float] = Field(None, gt=10.0, lt=80.0)
     braco_contraido: Optional[float] = Field(None, gt=10.0, lt=80.0)
     
-    # Habilita suporte a conversão de Enums a partir de strings
     model_config = ConfigDict(extra='forbid', use_enum_values=True)
 
 

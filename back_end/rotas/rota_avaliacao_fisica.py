@@ -27,18 +27,9 @@ def criar_avaliacao():
     usuario_id = _obter_usuario_id()
     dados_brutos = request.get_json() or {}
 
-    try:
-        schema = AvaliacaoCreateSchema(**dados_brutos)
-        # model_dump extrai os dados sanitizados e validados do Pydantic
-        dados_validados = schema.model_dump(exclude_unset=True)
-    except ValidationError as e:
-        return (
-            jsonify({
-                'erro': 'Dados inválidos na requisição',
-                'detalhes': formatar_erros_pydantic(e),
-            }),
-            400,
-        )
+    schema = AvaliacaoCreateSchema(**dados_brutos)
+    # model_dump extrai os dados sanitizados e validados do Pydantic
+    dados_validados = schema.model_dump(exclude_unset=True)
 
     avaliacao, erro = AvaliacaoService.criar_avaliacao(
         usuario_id, dados_validados
@@ -93,17 +84,8 @@ def atualizar_avaliacao(avaliacao_id: int):
     usuario_id = _obter_usuario_id()
     dados_brutos = request.get_json() or {}
 
-    try:
-        schema = AvaliacaoUpdateSchema(**dados_brutos)
-        dados_validados = schema.model_dump(exclude_unset=True)
-    except ValidationError as e:
-        return (
-            jsonify({
-                'erro': 'Dados inválidos na requisição',
-                'detalhes': formatar_erros_pydantic(e),
-            }),
-            400,
-        )
+    schema = AvaliacaoUpdateSchema(**dados_brutos)
+    dados_validados = schema.model_dump(exclude_unset=True)
 
     avaliacao, erro = AvaliacaoService.atualizar_avaliacao(
         avaliacao_id=avaliacao_id,
@@ -123,9 +105,6 @@ def atualizar_avaliacao(avaliacao_id: int):
     )
 
 
-# ==============================================================================
-# 4. DESATIVAR AVALIAÇÃO - SOFT DELETE (DELETE /api/avaliacoes/<id>)
-# ==============================================================================
 @avaliacao_bp.delete('/<int:avaliacao_id>')
 @jwt_required()
 def desativar_avaliacao(avaliacao_id: int):

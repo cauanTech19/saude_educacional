@@ -127,7 +127,7 @@ class MetaService:
             # 4. Instancia e salva a nova meta ativa
             nova_meta = Meta(
                 usuario_id=usuario_id,
-                avaliacao_origem_id=ultima_avaliacao.id,  # Vincula à avaliação que originou os cálculos
+                avaliacao_origem_id=ultima_avaliacao.id,  
                 objetivo=objetivo,
                 peso_alvo_kg=peso_alvo,
                 calorias_alvo_kcal=calorias_alvo,

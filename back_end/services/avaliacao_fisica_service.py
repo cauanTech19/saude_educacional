@@ -151,9 +151,6 @@ class AvaliacaoService:
 
         for chave, valor in dados_validados.items():
             if chave in CAMPOS_PERMITIDOS and valor is not None:
-                # Tratamento especial caso envie sexo_biologico como string
-                if chave == 'sexo_biologico' and not isinstance(valor, SexoBiologico):
-                  valor = SexoBiologico(valor)
                 setattr(avaliacao, chave, valor)
 
         # Recalcula IMC e TMB

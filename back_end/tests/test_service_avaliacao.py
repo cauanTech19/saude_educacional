@@ -1,8 +1,7 @@
-from datetime import date, datetime, timezone
+from datetime import date
 import pytest
-from unittest.mock import MagicMock, patch
-
-from models import AvaliacaoFisica, NivelAtividade, StatusAvaliacaoEnum, Usuario, db
+from unittest.mock import patch
+from models import  NivelAtividade, StatusAvaliacaoEnum, Usuario, db
 from services.avaliacao_fisica_service import AvaliacaoService
 
 

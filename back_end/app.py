@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from models import TokenBlocklist
@@ -8,7 +8,8 @@ from rotas.rota_user import auth_bp
 from rotas.rota_avaliacao_fisica import avaliacao_bp
 from models import bcrypt, db
 from rotas.rota_meta import meta_bp
-
+from rotas.rota_registro_diario import registro_bp
+from rotas.formatadores import formatar_erros_pydantic, ValidationError
 
 load_dotenv()
 
@@ -43,9 +44,18 @@ def create_app(test_config=False):
     token = db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar()
     return token is not None
 
+  @app.errorhandler(ValidationError)
+  def handle_pydantic_validation_error(e: ValidationError):
+    """Captura qualquer ValidationError do Pydantic lançado na aplicação
+    e retorna uma resposta padronizada com status 400 Bad Request.
+    """
+    
+    return jsonify({"erros": formatar_erros_pydantic(e)}), 400
+
   app.register_blueprint(auth_bp, url_prefix='/api/auth')
   app.register_blueprint(avaliacao_bp, url_prefix='/api/avaliacoes')
   app.register_blueprint(meta_bp, url_prefix='/api/metas')
+  app.register_blueprint(registro_bp, url_prefix='/registros/diarios')
 
 
   return app
