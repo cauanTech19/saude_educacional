@@ -87,5 +87,5 @@ def test_cadastro_senhas_invalidas_falham(client, dados_usuario_validos, senha_i
   json_data = response.get_json()
 
   assert response.status_code == 400
-  assert 'erro' in json_data
-  assert mensagem_esperada in json_data['erro']
+  assert 'erros' in json_data
+  assert mensagem_esperada in json_data['erros']

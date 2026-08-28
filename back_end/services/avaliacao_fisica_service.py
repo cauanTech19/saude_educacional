@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 from models import AvaliacaoFisica, NivelAtividade, Usuario, db, SexoBiologico, select, StatusAvaliacaoEnum
-
+from rotas.formatadores import formatar_erros_pydantic, ValidationError
+from schemas.avaliacao_fisica import AvaliacaoCreateSchema, AvaliacaoUpdateSchema
 
 class AvaliacaoService:
     @staticmethod
@@ -138,20 +139,16 @@ class AvaliacaoService:
         if not avaliacao:
             return None, 'Avaliação não encontrada ou desativada.'
 
-        CAMPOS_PERMITIDOS = {
-            'peso',
-            'altura',
-            'sexo_biologico',
-            'nivel_atividade_padrao',
-            'cintura',
-            'quadril',
-            'braco_relaxado',
-            'braco_contraido',
-        }
+        try:
+            schema_validado = AvaliacaoUpdateSchema(**dados_validados)
+        except ValidationError as e:
+            return None, formatar_erros_pydantic(e)
+        
 
-        for chave, valor in dados_validados.items():
-            if chave in CAMPOS_PERMITIDOS and valor is not None:
-                setattr(avaliacao, chave, valor)
+        dados_dict = schema_validado.model_dump(exclude_unset=True)
+        for chave, valor in dados_dict.items():
+            setattr(avaliacao, chave, valor)
+
 
         # Recalcula IMC e TMB
         avaliacao.imc = AvaliacaoService.calcular_imc(avaliacao.peso, avaliacao.altura)

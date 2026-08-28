@@ -1,10 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from pydantic import ValidationError
-
 from schemas.avaliacao_fisica import AvaliacaoCreateSchema, AvaliacaoUpdateSchema
 from services.avaliacao_fisica_service import AvaliacaoService
-from rotas.formatadores import formatar_erros_pydantic
 
 avaliacao_bp = Blueprint('avaliacao', __name__)
 
@@ -17,9 +14,6 @@ def _obter_usuario_id() -> int:
     return int(identity)
 
 
-# ==============================================================================
-# 1. CRIAR AVALIAÇÃO FÍSICA (POST /api/avaliacoes/)
-# ==============================================================================
 @avaliacao_bp.post('/')
 @jwt_required()
 def criar_avaliacao():
@@ -28,7 +22,6 @@ def criar_avaliacao():
     dados_brutos = request.get_json() or {}
 
     schema = AvaliacaoCreateSchema(**dados_brutos)
-    # model_dump extrai os dados sanitizados e validados do Pydantic
     dados_validados = schema.model_dump(exclude_unset=True)
 
     avaliacao, erro = AvaliacaoService.criar_avaliacao(
@@ -37,7 +30,6 @@ def criar_avaliacao():
     if erro:
         return jsonify({'erro': erro}), 400
 
-    # Retorna o dict 'dados' com a chave 'id' que o teste res_post.get_json()['dados']['id'] exige
     return (
         jsonify({
             'mensagem': 'Avaliação física criada com sucesso!',
@@ -47,9 +39,6 @@ def criar_avaliacao():
     )
 
 
-# ==============================================================================
-# 2. LISTAR AVALIAÇÕES DO USUÁRIO (GET /api/avaliacoes/)
-# ==============================================================================
 @avaliacao_bp.get('/')
 @jwt_required()
 def listar_avaliacoes():
@@ -75,26 +64,21 @@ def listar_avaliacoes():
     )
 
 
-# ==============================================================================
-# 3. ATUALIZAR AVALIAÇÃO (PUT /api/avaliacoes/<id>)
-# ==============================================================================
 @avaliacao_bp.put('/<int:avaliacao_id>')
 @jwt_required()
 def atualizar_avaliacao(avaliacao_id: int):
     usuario_id = _obter_usuario_id()
     dados_brutos = request.get_json() or {}
 
-    schema = AvaliacaoUpdateSchema(**dados_brutos)
-    dados_validados = schema.model_dump(exclude_unset=True)
-
     avaliacao, erro = AvaliacaoService.atualizar_avaliacao(
         avaliacao_id=avaliacao_id,
         usuario_id=usuario_id,
-        dados_validados=dados_validados,
+        dados_validados=dados_brutos,
     )
 
     if erro:
-        return jsonify({'erro': erro}), 404
+        status_code = 404 if erro == 'Avaliação não encontrada ou desativada.' else 400
+        return jsonify({'erros': erro}), status_code    
 
     return (
         jsonify({
@@ -120,9 +104,6 @@ def desativar_avaliacao(avaliacao_id: int):
     return jsonify({'mensagem': 'Avaliação física desativada com sucesso!'}), 200
 
 
-# ==============================================================================
-# 5. REATIVAR AVALIAÇÃO (PUT /api/avaliacoes/<id>/reativar)
-# ==============================================================================
 @avaliacao_bp.put('/<int:avaliacao_id>/reativar')
 @jwt_required()
 def reativar_avaliacao(avaliacao_id: int):

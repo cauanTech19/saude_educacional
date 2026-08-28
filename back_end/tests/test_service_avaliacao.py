@@ -157,15 +157,15 @@ class TestAvaliacaoServiceBD:
         assert len(todas) == 2
 
     def test_atualizar_avaliacao_sucesso_e_recalculo(self, db_session, usuario_db):
+        """Garante que a atualização altera os dados e recalcula o IMC corretamente."""
         dados_iniciais = {'peso': 80.0, 'altura': 1.80, 'sexo_biologico': 'M'}
         avaliacao, _ = AvaliacaoService.criar_avaliacao(usuario_db.id, dados_iniciais)
         imc_inicial = avaliacao.imc
 
         novos_dados = {
-            'peso': 90.0,  # Aumentou peso
+            'peso': 90.0,
             'altura': 1.80,
             'cintura': 90.0,
-            'campo_ignorado': 'Ataque Hack'  # Não está na whitelist
         }
 
         aval_atualizada, erro = AvaliacaoService.atualizar_avaliacao(
@@ -175,15 +175,30 @@ class TestAvaliacaoServiceBD:
         assert erro is None
         assert aval_atualizada.peso == 90.0
         assert aval_atualizada.cintura == 90.0
-        assert aval_atualizada.imc > imc_inicial  # Recalculou IMC
-        assert not hasattr(aval_atualizada, 'campo_ignorado')
-
-    def test_atualizar_avaliacao_inexistente_ou_desativada(self, db_session, usuario_db):
+        assert aval_atualizada.imc > imc_inicial 
         dados = {'peso': 85.0}
         aval, erro = AvaliacaoService.atualizar_avaliacao(999, usuario_db.id, dados)
 
         assert aval is None
         assert erro == 'Avaliação não encontrada ou desativada.'
+
+    def test_atualizar_avaliacao_erro_campo_extra_proibido(self, db_session, usuario_db):
+        """Garante que o Pydantic (extra='forbid') rejeita atualizações com campos desconhecidos."""
+        dados_iniciais = {'peso': 80.0, 'altura': 1.80, 'sexo_biologico': 'M'}
+        avaliacao, _ = AvaliacaoService.criar_avaliacao(usuario_db.id, dados_iniciais)
+
+        novos_dados = {
+            'peso': 90.0,
+            'campo_ignorado': 'Ataque Hack' 
+        }
+
+        aval_atualizada, erro = AvaliacaoService.atualizar_avaliacao(
+            avaliacao.id, usuario_db.id, novos_dados
+        )
+
+        assert aval_atualizada is None
+        assert erro is not None
+        assert "campo_ignorado" in str(erro)
 
     def test_desativar_e_reativar_avaliacao_soft_delete(self, db_session, usuario_db):
         dados = {"peso": 60.0, "altura": 1.65, "sexo_biologico": 'M', "nivel_atividade_padrao": "leve"}

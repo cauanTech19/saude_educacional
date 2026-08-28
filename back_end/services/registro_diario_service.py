@@ -172,7 +172,6 @@ class RegistroDiarioService:
         calorias_consumidas = registro.calorias_consumidas_kcal or 0
         calorias_alvo = meta.calorias_alvo_kcal or 0
 
-        # Aceita uma margem de +- 5% para dizer que manteve o peso
         calorias_ok = (calorias_alvo * 0.95) <= calorias_consumidas <= (calorias_alvo * 1.05)
         proteina_ok = (registro.proteinas_g or 0) >= (meta.proteinas_alvo_g or 0)
         agua_ok = (registro.agua_consumida_ml or 0) >= (meta.meta_agua_ml or 0)
