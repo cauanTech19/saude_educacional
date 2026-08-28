@@ -4,7 +4,7 @@ from models import Meta, AvaliacaoFisica, Objetivo, NivelAtividade, StatusMetaEn
 from services.meta_service import MetaService
 
 @pytest.fixture
-def mock_avaliacao():
+def mock_avaliacao(app):
     """Mock de uma Avaliação Física com dados válidos."""
     avaliacao = MagicMock(spec=AvaliacaoFisica)
     avaliacao.id = 10
@@ -17,7 +17,7 @@ def mock_avaliacao():
 
 
 @pytest.fixture
-def mock_meta():
+def mock_meta(app):
     """Mock de uma Meta ativa."""
     meta = MagicMock(spec=Meta)
     meta.id = 100
