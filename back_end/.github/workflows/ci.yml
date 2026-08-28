@@ -2,9 +2,9 @@ name: Pipeline de CI - Testes Automatizados
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "dev" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "dev" ]
 
 jobs:
   testes:
@@ -26,4 +26,4 @@ jobs:
 
     - name: Executar testes com Pytest
       run: |
-        pytest
+        pytest back_end/
