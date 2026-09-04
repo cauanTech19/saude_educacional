@@ -2,6 +2,54 @@ import pytest
 from pydantic import ValidationError
 from schemas.user import UsuarioSchema
 
+# ==============================================================================
+# TESTES DE VALIDAÇÃO DE ACEITE DOS TERMOS (LGPD)
+# ==============================================================================
+
+def test_aceite_termos_sucesso(dados_usuario_validos):
+    """Garante que a validação passa com sucesso quando aceitou_termos é True."""
+    payload = dados_usuario_validos.copy()
+    payload['aceitou_termos'] = True
+
+    # Instancia o Schema do Pydantic
+    schema = UsuarioSchema(**payload)
+
+    assert schema.aceitou_termos is True
+
+
+def test_aceite_termos_recusado_deve_falhar(dados_usuario_validos):
+    """Garante que lançará ValidationError caso o usuário passe False."""
+    payload = dados_usuario_validos.copy()
+    payload['aceitou_termos'] = False
+
+    with pytest.raises(ValidationError) as exc_info:
+        UsuarioSchema(**payload)
+
+    erros = exc_info.value.errors()
+    assert len(erros) == 1
+    assert (
+        'Você deve aceitar os Termos de Uso e a Política de Privacidade para criar uma conta.'
+        in erros[0]['msg']
+    )
+
+
+def test_aceite_termos_ausente_ou_tipo_invalido(dados_usuario_validos):
+    """Valida o comportamento quando o campo é omitido ou enviado com tipo incorreto."""
+    payload = dados_usuario_validos.copy()
+
+    # 1. Campo omitido (rejeição por campo obrigatório)
+    if 'aceitou_termos' in payload:
+        del payload['aceitou_termos']
+
+    with pytest.raises(ValidationError):
+        UsuarioSchema(**payload)
+
+    # 2. Tipo inválido (string que não é booleana convertível)
+    payload['aceitou_termos'] = 'nao'
+
+    with pytest.raises(ValidationError):
+        UsuarioSchema(**payload)
+
 
 def test_schema_usuario_valido(dados_usuario_validos):
     """Garante que dados válidos passam no schema sem exceção."""

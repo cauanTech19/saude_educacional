@@ -2,7 +2,6 @@ import re
 from datetime import date
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
-from models import NivelAtividade
 from pydantic_core import PydanticCustomError
 
 class UsuarioSchema(BaseModel):
@@ -12,8 +11,17 @@ class UsuarioSchema(BaseModel):
   email: EmailStr
   senha: str 
   data_nascimento: date
-  nivel_atividade_padrao: Optional[NivelAtividade] = NivelAtividade.SEDENTARIO
   model_config = ConfigDict(extra='forbid')
+  aceitou_termos: bool
+
+  @field_validator('aceitou_termos')
+  @classmethod
+  def validar_aceite(cls, valor: bool) -> bool:
+    if not valor:
+      raise ValueError(
+        'Você deve aceitar os Termos de Uso e a Política de Privacidade para criar uma conta.'
+      )
+    return valor
 
 
   @field_validator("nome")

@@ -39,6 +39,8 @@ class TokenBlocklist(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   jti = db.Column(db.String(36), nullable=False, index=True)
   criado_em = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+  expira_em = db.Column(db.DateTime, nullable=False, index=True)
+
 
 class Usuario(db.Model):
   __tablename__ = 'usuarios'
@@ -97,6 +99,27 @@ class Usuario(db.Model):
       'ativo': self.ativo,
       'criado_em': self.criado_em.isoformat() if self.criado_em else None,
     }
+
+
+class AceiteTermo(db.Model):
+  __tablename__ = 'aceites_termos'
+
+  id = db.Column(db.Integer, primary_key=True)
+  usuario_id = db.Column(
+    db.Integer,
+    db.ForeignKey('usuarios.id', ondelete='CASCADE'),
+    nullable=False,
+  )
+
+  versao_termo = db.Column(db.String(10), nullable=False)  
+  
+  ip_origem = db.Column(db.String(45), nullable=True)  
+
+
+  aceito_em = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+  # Relacionamento com o usuário
+  usuario = db.relationship('Usuario', backref=db.backref('aceites_termos', cascade='all, delete-orphan'))
 
 
 class AvaliacaoFisica(db.Model):

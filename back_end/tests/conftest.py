@@ -11,7 +11,7 @@ if str(backend_dir) not in sys.path:
 from app import create_app
 from models import db, Usuario, Meta, Objetivo
 from flask_jwt_extended import create_access_token
-
+from services.user_service import UsuarioService
 
 @pytest.fixture
 def app():
@@ -77,6 +77,29 @@ def dados_usuario_validos():
         "email": "carlos@exemplo.com",
         "senha": "senhaSegura123!@",
         "data_nascimento": "1995-08-15",
+        "aceitou_termos": True,
+    }
+
+
+@pytest.fixture
+def usuario_para_deletar(db_session):
+    """Fixture que cria um usuário cadastrado e gera o token de acesso JWT."""
+    payload = {
+        "nome": "Cauan Justino",
+        "email": "cauan_delete@teste.com",
+        "senha": "senha_segura123",
+        "data_nascimento": "2006-04-17",
+    }
+    usuario_dict, _ = UsuarioService.criar_usuario(payload)
+
+    # Gera token autenticado
+    access_token = create_access_token(identity=str(usuario_dict["id"]))
+
+    return {
+        "id": usuario_dict["id"],
+        "email": payload["email"],
+        "senha": payload["senha"],
+        "token": access_token,
     }
 
 
